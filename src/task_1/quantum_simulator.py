@@ -1,5 +1,7 @@
 import numpy as np
-from typing import List, Tuple
+import matplotlib.pyplot as plt
+from typing import List, Tuple, Union
+import time
 
 class QuantumSimulator:
     def __init__(self):
@@ -155,3 +157,43 @@ class QuantumSimulator:
         if len(state.shape) > 1:
             state = state.flatten()
         return np.vdot(state, operator @ state)
+    
+def benchmark_simulators(max_qubits: int = 6) -> Tuple[List[float], List[float]]:
+    """Benchmark both simulation methods"""
+    matrix_times = []
+    tensor_times = []
+    sim = QuantumSimulator()
+    
+    for n in range(1, max_qubits + 1):
+        # Create test circuit
+        gates = []
+        for i in range(n):
+            gates.append(('H', i))
+            if i < n-1:
+                gates.append(('CNOT', i, i+1))
+        
+        # Benchmark matrix method
+        start = time.time()
+        _ = sim.simulate_circuit_matrix(n, gates)
+        matrix_times.append(time.time() - start)
+        
+        # Benchmark tensor method
+        start = time.time()
+        _ = sim.simulate_circuit_tensor(n, gates)
+        tensor_times.append(time.time() - start)
+    
+    return matrix_times, tensor_times
+
+def plot_benchmarks(matrix_times: List[float], tensor_times: List[float]):
+    plt.figure(figsize=(10, 6))
+    qubits = range(1, len(matrix_times) + 1)
+    
+    plt.semilogy(qubits, matrix_times, 'o-', label='Matrix multiplication')
+    plt.semilogy(qubits, tensor_times, 's-', label='Tensor multiplication')
+    
+    plt.xlabel('Number of qubits')
+    plt.ylabel('Runtime (seconds)')
+    plt.title('Quantum Circuit Simulation Runtime Comparison')
+    plt.grid(True)
+    plt.legend()
+    plt.show()

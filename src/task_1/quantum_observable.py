@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List, Tuple
+from task_1.quantum_simulator import QuantumSimulator
 
 class QuantumObservables:
     def __init__(self):
@@ -26,3 +27,58 @@ class QuantumObservables:
         for obs_type, target in observables:
             op = op @ self.get_observable(obs_type, target, n_qubits)
         return op
+
+def demonstrate_expectations():
+    # Initialize our simulators
+    simulator = QuantumSimulator()
+    observables = QuantumObservables()
+    
+    # Example 1: Single qubit in superposition
+    print("\nExample 1: Single qubit in superposition (H|0⟩)")
+    n_qubits = 1
+    circuit = [('H', 0)]
+    state = simulator.simulate_circuit_matrix(n_qubits, circuit)
+    
+    # Measure different observables
+    for obs_type in ['X', 'Y', 'Z']:
+        observable = observables.get_observable(obs_type, 0, n_qubits)
+        expect_val = simulator.expectation_value(state, observable)
+        print(f"⟨{obs_type}⟩ = {expect_val.real:.3f}")
+    
+    # Example 2: Bell state
+    print("\nExample 2: Bell state (CNOT(H⊗I)|00⟩)")
+    n_qubits = 2
+    circuit = [('H', 0), ('CNOT', 0, 1)]
+    state = simulator.simulate_circuit_matrix(n_qubits, circuit)
+    
+    # Measure correlations
+    zz_obs = observables.get_product_observable([('Z', 0), ('Z', 1)], n_qubits)
+    xx_obs = observables.get_product_observable([('X', 0), ('X', 1)], n_qubits)
+    yy_obs = observables.get_product_observable([('Y', 0), ('Y', 1)], n_qubits)
+    
+    print(f"⟨Z₁Z₂⟩ = {simulator.expectation_value(state, zz_obs).real:.3f}")
+    print(f"⟨X₁X₂⟩ = {simulator.expectation_value(state, xx_obs).real:.3f}")
+    print(f"⟨Y₁Y₂⟩ = {simulator.expectation_value(state, yy_obs).real:.3f}")
+    
+    # Example 3: GHZ state
+    print("\nExample 3: GHZ state")
+    n_qubits = 3
+    circuit = [
+        ('H', 0),
+        ('CNOT', 0, 1),
+        ('CNOT', 1, 2)
+    ]
+    state = simulator.simulate_circuit_matrix(n_qubits, circuit)
+    
+    # Measure various correlations
+    zzz_obs = observables.get_product_observable([('Z', 0), ('Z', 1), ('Z', 2)], n_qubits)
+    xxx_obs = observables.get_product_observable([('X', 0), ('X', 1), ('X', 2)], n_qubits)
+    
+    print(f"⟨Z₁Z₂Z₃⟩ = {simulator.expectation_value(state, zzz_obs).real:.3f}")
+    print(f"⟨X₁X₂X₃⟩ = {simulator.expectation_value(state, xxx_obs).real:.3f}")
+    
+    # Individual Z measurements should be 0 for GHZ state
+    for i in range(n_qubits):
+        z_obs = observables.get_observable('Z', i, n_qubits)
+        expect_val = simulator.expectation_value(state, z_obs)
+        print(f"⟨Z_{i+1}⟩ = {expect_val.real:.3f}")

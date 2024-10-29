@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Tuple
-from task_1.quantum_simulator import QuantumSimulator
+from src.task_1.quantum_simulator import QuantumSimulator
 
 class QuantumObservables:
     def __init__(self):
